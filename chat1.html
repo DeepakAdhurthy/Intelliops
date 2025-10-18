@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GITAM University Assistant</title>
+<style>
+:root{
+  --primary:#003366;
+  --accent:#0077b6;
+  --bg:#f9f9f9;
+  --shape1:#a3cef1;
+  --shape2:#e0f7fa;
+}
+
+html, body{
+  margin:0; padding:0; font-family: "Segoe UI", sans-serif; height:100%; overflow:hidden;
+  background:#f9f9f9;
+}
+
+canvas#bgCanvas, #gradientOverlay{
+  position:fixed; inset:0; width:100%; height:100%; z-index:0; pointer-events:none;
+}
+#gradientOverlay{
+  background: linear-gradient(270deg, #003366, #0077b6, #a3cef1, #e0f7fa);
+  background-size: 800% 800%;
+  animation: gradientMove 20s ease infinite;
+  opacity:0.35;
+}
+@keyframes gradientMove{
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
+}
+
+/* Movable Avatar */
+#avatarWrap{
+  position:fixed; right:24px; bottom:24px; width:80px; height:80px; z-index:5;
+  cursor:grab; border-radius:50%; background:linear-gradient(45deg, #0077b6, #00b4d8); display:flex;
+  justify-content:center; align-items:center; color:white; font-size:30px; user-select:none;
+  box-shadow:0 6px 18px rgba(0,0,0,0.18); transition: transform 0.3s, box-shadow 0.3s;
+}
+#avatarWrap:hover{ transform: scale(1.1); box-shadow:0 12px 28px rgba(0,0,0,0.25);}
+#avatarWrap:active{ cursor:grabbing; }
+#avatarWrap::after {
+  content:'';
+  position:absolute; inset:-8px; border-radius:50%;
+  background:rgba(0,119,182,0.3);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%,100%{ transform: scale(1); opacity:0.3; }
+  50%{ transform: scale(1.3); opacity:0; }
+}
+
+@keyframes bounce {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+/* Chat Container */
+#chatContainer{
+  position:fixed; width:440px; height:540px; border-radius:24px;
+  background: rgba(255,255,255,0.75); backdrop-filter: blur(16px);
+  box-shadow:0 18px 50px rgba(0,0,0,0.18);
+  top:50%; left:50%; transform:translate(-50%,-50%) scale(0.8);
+  opacity:0; transition: transform 0.5s, opacity 0.3s;
+  display:flex; flex-direction:column; overflow:hidden; z-index:3;
+}
+#chatContainer.open{ opacity:1; transform:translate(-50%,-50%) scale(1); }
+
+/* Glass highlight animation */
+#chatContainer::before{
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(120deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 60%);
+  transform:translateX(-150%); animation: highlightMove 5s linear infinite;
+}
+@keyframes highlightMove{
+  0%{ transform:translateX(-150%); }
+  100%{ transform:translateX(150%); }
+}
+
+.chatHeader{
+  padding:16px; background:var(--primary); color:white; font-weight:600; border-top-left-radius:24px; border-top-right-radius:24px;
+  display:flex; justify-content:space-between; align-items:center; position:relative;
+}
+.chatHeader::after {
+  content:''; position:absolute; bottom:0; left:0; width:100%; height:3px;
+  background:linear-gradient(90deg, #a3cef1, #e0f7fa);
+  animation: slide 3s infinite linear;
+}
+@keyframes slide {
+  0%{ transform: translateX(-100%); }
+  100%{ transform: translateX(100%); }
+}
+
+.closeBtn{
+  background:transparent; border:none; color:white; font-size:20px; cursor:pointer;
+}
+
+.chatBody{
+  flex:1; padding:16px; overflow-y:auto; display:flex; flex-direction:column; gap:10px;
+}
+
+.bubble{
+  max-width:70%; padding:12px 16px; border-radius:18px; box-shadow:0 4px 20px rgba(0,0,0,0.08);
+  word-wrap: break-word; opacity:0; transform: translateY(20px);
+  animation: bubbleIn 0.4s forwards;
+}
+.bubble.user{ margin-left:auto; background:linear-gradient(120deg, #0077b6, #00b4d8); color:white; }
+.bubble.bot{ margin-right:auto; background:rgba(255,255,255,0.9); color:#003366; position:relative; }
+.bubble.bot::after{ content:'✨'; margin-left:6px; animation: sparkle 2s infinite; }
+
+@keyframes bubbleIn{ 0%{opacity:0; transform:translateY(20px);} 100%{opacity:1; transform:translateY(0);} }
+@keyframes sparkle{ 0%,100%{opacity:0; transform:translateY(0);} 50%{opacity:1; transform:translateY(-4px);} }
+
+.typing {
+  font-style: normal; color: #555; margin: 4px 0; display: flex; gap: 4px; align-items: center;
+}
+.typing span {
+  width: 6px; height: 6px; background: #555; border-radius: 50%;
+  display: inline-block; animation: bounceDot 1s infinite;
+}
+.typing span:nth-child(2) { animation-delay: 0.2s; }
+.typing span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes bounceDot {
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1); }
+}
+
+.chatInputArea{ display:flex; gap:8px; padding:12px; border-top:1px solid #ccc; background:transparent; }
+.chatInputArea input{ flex:1; padding:10px 12px; border-radius:12px; border:1px solid #ccc; outline:none; font-size:14px; }
+.chatInputArea button{ width:44px; height:44px; border-radius:12px; border:none; cursor:pointer; font-size:18px; background:linear-gradient(120deg, #0077b6, #00b4d8); color:white; transition: transform 0.2s; }
+.chatInputArea button:hover{ transform: scale(1.05); }
+
+.faqButtons{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+.faqButtons button{
+  padding:8px 16px; border-radius:16px; border:none; background:linear-gradient(120deg,#a3cef1,#e0f7fa); cursor:pointer; font-weight:500;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.faqButtons button:hover{ transform:scale(1.05); box-shadow:0 6px 16px rgba(0,0,0,0.15);}
+</style>
+</head>
+<body>
+
+<canvas id="bgCanvas"></canvas>
+<div id="gradientOverlay"></div>
+
+<div id="avatarWrap" title="Gitam Assistant">🤖</div>
+
+<div id="chatContainer" role="dialog" aria-hidden="true">
+  <div class="chatHeader">Gitam Assistant
+    <button class="closeBtn" id="closeChat">✕</button>
+  </div>
+  <div class="chatBody" id="chatBody">
+    <div class="bubble bot">Hi! How can I help you today?</div>
+    <div class="faqButtons" id="faqButtons"></div>
+  </div>
+  <div class="chatInputArea">
+    <input id="chatInput" placeholder="Type your query...">
+    <button id="sendBtn">➤</button>
+    <button id="micBtn">🎤</button>
+  </div>
+</div>
+
+<script>
+/* ---------------- Background shapes ---------------- */
+const canvas = document.getElementById('bgCanvas');
+const ctx = canvas.getContext('2d');
+let W = canvas.width = window.innerWidth;
+let H = canvas.height = window.innerHeight;
+
+class Shape{
+  constructor(){
+    this.x=Math.random()*W; this.y=Math.random()*H;
+    this.size=20+Math.random()*30; this.type=['circle','triangle','hexagon'][Math.floor(Math.random()*3)];
+    this.dx=(Math.random()-0.5)*0.3; this.dy=(Math.random()-0.5)*0.3;
+    this.angle=Math.random()*Math.PI*2; this.dAngle=(Math.random()-0.5)*0.01;
+    this.color=['#003366','#0077b6','#a3cef1','#e0f7fa'][Math.floor(Math.random()*4)];
+    this.alpha=0.1+Math.random()*0.2;
+  }
+  draw(){
+    ctx.save(); ctx.globalAlpha=this.alpha; ctx.translate(this.x,this.y); ctx.rotate(this.angle); ctx.fillStyle=this.color;
+    switch(this.type){
+      case 'circle': ctx.beginPath(); ctx.arc(0,0,this.size/2,0,Math.PI*2); ctx.fill(); break;
+      case 'triangle': ctx.beginPath(); ctx.moveTo(0,-this.size/2); ctx.lineTo(-this.size/2,this.size/2); ctx.lineTo(this.size/2,this.size/2); ctx.closePath(); ctx.fill(); break;
+      case 'hexagon': ctx.beginPath(); for(let i=0;i<6;i++){ ctx.lineTo(this.size/2*Math.cos(Math.PI/3*i),this.size/2*Math.sin(Math.PI/3*i)); } ctx.closePath(); ctx.fill(); break;
+    }
+    ctx.restore(); this.x+=this.dx; this.y+=this.dy; this.angle+=this.dAngle;
+    if(this.x<-50)this.x=W+50; if(this.x>W+50)this.x=-50; if(this.y<-50)this.y=H+50; if(this.y>H+50)this.y=-50;
+  }
+}
+const shapes=[]; for(let i=0;i<50;i++) shapes.push(new Shape());
+function animateBg(){ ctx.clearRect(0,0,W,H); shapes.forEach(s=>s.draw()); requestAnimationFrame(animateBg); }
+animateBg();
+window.addEventListener('resize',()=>{ W=canvas.width=window.innerWidth; H=canvas.height=window.innerHeight; });
+
+/* ---------------- Movable Avatar ---------------- */
+const avatarWrap=document.getElementById('avatarWrap');
+let isDragging=false, offsetX=0, offsetY=0;
+avatarWrap.addEventListener('pointerdown',e=>{isDragging=true; offsetX=e.clientX-avatarWrap.offsetLeft; offsetY=e.clientY-avatarWrap.offsetTop; avatarWrap.setPointerCapture(e.pointerId);});
+window.addEventListener('pointermove',e=>{if(!isDragging)return; avatarWrap.style.left=e.clientX-offsetX+'px'; avatarWrap.style.top=e.clientY-offsetY+'px';});
+window.addEventListener('pointerup',e=>{isDragging=false;});
+
+/* ---------------- Chat toggle ---------------- */
+const chatContainer=document.getElementById('chatContainer');
+const closeChat=document.getElementById('closeChat');
+avatarWrap.addEventListener('click',()=>{if(!isDragging) chatContainer.classList.add('open');});
+closeChat.addEventListener('click',()=>{chatContainer.classList.remove('open');});
+
+/* ---------------- Chat bubbles ---------------- */
+const chatBody=document.getElementById('chatBody');
+const chatInput=document.getElementById('chatInput');
+const sendBtn=document.getElementById('sendBtn');
+
+function appendBubble(text,type){
+  const b=document.createElement('div'); 
+  b.className='bubble '+(type==='user'?'user':'bot'); 
+  b.textContent=text;
+  chatBody.appendChild(b); 
+  chatBody.scrollTop=chatBody.scrollHeight;
+
+  if(type==='bot'){
+    avatarWrap.style.animation='bounce 0.5s';
+    avatarWrap.addEventListener('animationend',()=>{ avatarWrap.style.animation=''; }, {once:true});
+  }
+}
+
+/* ---------------- Load FAQs ---------------- */
+async function loadFAQs(){
+  try{
+    const res = await fetch('faqs.json');
+    const data = await res.json();
+    window.faqs = data;
+    const container = document.getElementById('faqButtons');
+    data.forEach(faq=>{
+      const btn = document.createElement('button');
+      btn.textContent = faq.question;
+      btn.addEventListener('click',()=>{ appendBubble(faq.question,'user'); appendBubble(faq.answer,'bot'); });
+      container.appendChild(btn);
+    });
+  }catch(e){
+    console.error("Failed to load FAQs:", e);
+  }
+}
+loadFAQs();
+
+/* ---------------- Send input ---------------- */
+sendBtn.addEventListener('click', handleUserInput);
+chatInput.addEventListener('keydown', e=>{ if(e.key==='Enter') handleUserInput(); });
+
+function handleUserInput(){
+  const input = chatInput.value.trim();
+  if(!input) return;
+  appendBubble(input,'user');
+  chatInput.value='';
+
+  const faq = window.faqs.find(f=>f.question.toLowerCase().includes(input.toLowerCase()));
+  if(faq) appendBubble(faq.answer,'bot');
+  else appendBubble("Sorry, I don't have an answer for that. Please choose a question from the FAQs.","bot");
+}
+
+/* ---------------- Voice ---------------- */
+const micBtn=document.getElementById('micBtn');
+const recognition = new(window.SpeechRecognition || window.webkitSpeechRecognition)();
+recognition.lang = 'en-US';
+micBtn.addEventListener('click', ()=>{ recognition.start(); });
+recognition.onresult = e=>{
+  const text = e.results[0][0].transcript;
+  chatInput.value = text;
+  handleUserInput();
+}
+</script>
+</body>
+</html>
