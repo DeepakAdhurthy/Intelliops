@@ -116,7 +116,7 @@ const AuthPage = () => {
   <div className="relative flex flex-col justify-center items-center text-white px-10 h-full">
     <Leaf className="w-20 h-20 mb-6 text-emerald-300" />
     <h1 className="text-4xl lg:text-5xl font-bold mb-4 text-center">
-      Tribal Organic Advisory
+      Crop Doc
     </h1>
     <p className="text-lg text-center max-w-md">
       Empowering farmers with AI-driven crop analysis and traditional organic wisdom
@@ -132,7 +132,7 @@ const AuthPage = () => {
               <Leaf className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Tribal Organic Advisory
+              Crop Doc
             </h1>
             <p className="text-gray-600">
               {isLogin ? 'Sign in to continue' : 'Create your account'}

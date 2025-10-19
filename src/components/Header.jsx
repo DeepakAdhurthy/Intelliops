@@ -308,7 +308,7 @@ const Header = ({ showMenu, setShowMenu }) => {
             </button>
             <Leaf className="w-8 h-8 text-green-600" />
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Tribal Organic Advisory</h1>
+              <h1 className="text-xl font-bold text-gray-900">Crop Disease Dectection & Advisory</h1>
               <p className="text-xs text-gray-600">
                 {user?.village && user?.district 
                   ? `${user.village}, ${user.district}` 

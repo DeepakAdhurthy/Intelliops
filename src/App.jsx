@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import DashboardPage from './pages/DashboardPage';
@@ -31,32 +30,19 @@ const AppContent = () => {
 
   const renderPage = () => {
     switch (currentPage) {
-      case 'home':
-        return <DashboardPage />;
-      case 'analyze':
-        return <AnalyzeCropPage />;
-      case 'solutions':
-        return <OrganicSolutionsPage />;
-      case 'traditional':
-        return <TraditionalKnowledgePage />;
-      case 'calendar':
-        return <SeasonalCalendarPage />;
-      case 'weather':
-        return <WeatherAdvisoryPage />;
-      case 'tutorials':
-        return <VideoTutorialsPage />;
-      case 'community':
-        return <CommunityPage />;
-      case 'consultation':
-        return <ConsultationPage />;
-      case 'suppliers':
-        return <SuppliersPages />;
-      case 'impact':
-        return <ImpactPage />;
-      case 'product':
-        return <Products/>;
-      default:
-        return <DashboardPage />;
+      case 'home': return <DashboardPage />;
+      case 'analyze': return <AnalyzeCropPage />;
+      case 'solutions': return <OrganicSolutionsPage />;
+      case 'traditional': return <TraditionalKnowledgePage />;
+      case 'calendar': return <SeasonalCalendarPage />;
+      case 'weather': return <WeatherAdvisoryPage />;
+      case 'tutorials': return <VideoTutorialsPage />;
+      case 'community': return <CommunityPage />;
+      case 'consultation': return <ConsultationPage />;
+      case 'suppliers': return <SuppliersPages />;
+      case 'impact': return <ImpactPage />;
+      case 'product': return <Products />;
+      default: return <DashboardPage />;
     }
   };
 
@@ -72,17 +58,17 @@ const AppContent = () => {
           setCurrentPage={setCurrentPage}
         />
 
-        <main className="flex-1 p-6">
-          {renderPage()}
-        </main>
+        <main className="flex-1 p-6">{renderPage()}</main>
       </div>
 
-      {/* ✅ Global Voice Assistant (visible everywhere) */}
-      <div className="fixed bottom-6 right-6 z-50 ">
-        <Chatbot/>
-        <VoiceAssistant/>
-        
-        
+      {/* ✅ Chatbot - bottom-right */}
+      <div className="fixed bottom-6 left-6 z-50">
+        <Chatbot />
+      </div>
+
+      {/* ✅ Voice Assistant - bottom-left */}
+      <div className="fixed bottom-6 left-6 z-50">
+        <VoiceAssistant />
       </div>
     </div>
   );
